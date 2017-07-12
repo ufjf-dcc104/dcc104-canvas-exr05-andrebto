@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DCC104 - Exemplo 02</title>
+    <script src="ImageLoader.js" charset="utf-8"></script>
+    <script src="AudioLoader.js" charset="utf-8"></script>
+    <script src="Sprite.js" charset="utf-8"></script>
+    <script src="Level.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1>DCC104 - Exemplo 02</h1>
+    <canvas></canvas>
+    <script>
+      var eCanvas = document.getElementsByTagName("canvas")[0];
+      eCanvas.width = 600;
+      eCanvas.height = 380;
+      var ctx = eCanvas.getContext("2d");
+
+      var il = new ImageLoader();
+      il.load("pc", "images/player_ship.png");
+      il.load("enemy", "images/enemy_1.png");
+      il.load("shot", "images/shot.png");
+
+      var al = new AudioLoader();
+      al.load("shot", "audios/Missle_Launch-Kibblesbob-2118796725.mp3");
+      al.load("boom", "audios/Grenade-SoundBible.com-1777900486.mp3");
+
+      var fps = 120;
+      var atual = new Date();
+      var anterior = new Date();
+      var dt = 1/fps;
+
+      var azul = new Sprite();
+      azul.x = 40;
+      azul.y = 75;
+      azul.radius = 16;
+      azul.placar = 10;
+      var red = new Sprite();
+      red.x = 560;
+      red.y = 305;
+      red.radius = 16;
+      red.angle = -180;
+      red.placar = 10;
+      
+      var fuel = 100;
+      var life_1 = 100;
+      var life_2 = 100;
+      var acelerandoX = false;
+      var acelerandoY = false;
+      var level = new Level();
+      level.imageLib = il;
+      level.init();
+      var running = true;
+
+      desenha();
+
+
+      function desenha(){
+        if(running) {
+        requestAnimationFrame(desenha);
+        atual = new Date();
+        dt = (atual - anterior)/1000;
+        ctx.clearRect(0,0,eCanvas.width, eCanvas.height)
+        ctx.strokeRect(0,0,eCanvas.width, eCanvas.height)
+        ctx.font="14px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText("Vida P1: "+azul.placar, 10, 30);
+        ctx.fillText("Vida P2: "+red.placar, 520, 30);
+
+        level.perseguirAng(azul,dt);
+
+        azul.moverAng(dt);
+        red.moverAng(dt);
+        level.moverAng(dt);
+
+        level.colidiuCom(azul,
+          function(inimigo, alvo){
+            alvo.vx = -alvo.vx;
+            alvo.vy = -alvo.vy;
+            if(alvo.placar > 0)
+              alvo.placar = alvo.placar - 1;
+          }
+        );
+
+
+        level.colidiuCom(red,
+          function(inimigo, alvo){
+            alvo.vx = -alvo.vx;
+            alvo.vy = -alvo.vy;
+            if(alvo.placar > 0)
+              alvo.placar = alvo.placar - 1;
+          }
+        );
+
+        azul.desenharImg(ctx, il.images["pc"]);
+        red.desenharImg(ctx, il.images["pc"]);
+        level.desenharImg(ctx);
+        level.colidiuComTirosCenario(al,"boom");
+        level.colidiuComTiros(al,"boom",0, azul);
+        level.colidiuComTiros(al,"boom",1, red);
+        anterior = atual;
+        if(red.placar == 0 || azul.placar == 0)
+          running = false;
+        }
+        else {
+          ctx.clearRect(0,0,eCanvas.width, eCanvas.height)
+          ctx.strokeRect(0,0,eCanvas.width, eCanvas.height)
+          ctx.font="14px Arial";
+          ctx.fillStyle = "black";
+          if(azul.placar == 0) {
+            ctx.fillText("Player 2 Ganhou ",240,200);
+          }
+          if(red.placa == 0) {
+            ctx.fillText("Player 1 Ganhou");
+          }
+        }
+      }
+
+      addEventListener("keydown", function(e){
+        if(fuel<=0) return;
+        console.log(e.keyCode);
+        switch (e.keyCode) {
+          case 32:
+            level.fire(azul, al, "shot", 0.5,0);
+            break;
+          case 16:
+            level.fire(red, al, "shot", 0.5,1);
+            break;
+          case 37:
+            azul.vang = -100;
+            break;
+          case 38:
+            azul.am = 50;
+            break;
+          case 87:
+            red.am = 50;
+            break;
+          case 83:
+            red.am = -50;
+            break;
+          case 68:
+            red.vang = +100;
+            break;
+          case 65:
+            red.vang = -100;
+            break;
+          case 39:
+            azul.vang = +100;
+            break;
+          case 40:
+            azul.am = -50;
+            break;
+          default:
+
+        }
+      });
+      addEventListener("keyup", function(e){
+        switch (e.keyCode) {
+          case 37:
+            azul.vang = 0;
+            break;
+          case 38:
+            azul.am = 0;
+            break;
+          case 39:
+            azul.vang = 0;
+            break;
+          case 40:
+            azul.am = 0;
+            break;
+          case 65:
+            red.vang = 0;
+            break;
+          case 68:
+            red.vang = 0;
+            break;
+          case 87:
+            red.am = 0;
+            break;
+          case 83:
+            red.am = 0;
+            break;
+          default:
+
+        }
+      });
+
+    </script>
+  </body>
+
+
+
+
+</html>
